@@ -1,0 +1,109 @@
+data "aws_caller_identity" "current" {}
+
+locals {
+  bucket_name = "${var.project}-tfstate-${data.aws_caller_identity.current.account_id}"
+}
+
+resource "aws_kms_key" "tfstate" {
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+}
+
+resource "aws_kms_alias" "tfstate" {
+  name          = "alias/${var.project}-tfstate"
+  target_key_id = aws_kms_key.tfstate.key_id
+}
+
+resource "aws_s3_bucket" "tfstate" {
+  bucket = local.bucket_name
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Хранение всех версий объекта. Испорченный state откатывается
+# восстановлением предыдущей версии файла
+resource "aws_s3_bucket_versioning" "tfstate" {
+  bucket = aws_s3_bucket.tfstate.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
+  bucket = aws_s3_bucket.tfstate.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.tfstate.arn
+    }
+
+    # S3 Bucket Keys сокращают число обращений к KMS и его стоимость
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "tfstate" {
+  bucket = aws_s3_bucket.tfstate.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Каждый apply создаёт новую версию state. Без уборки старые версии копятся бесконечно
+resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
+  bucket = aws_s3_bucket.tfstate.id
+
+  rule {
+    id     = "expire-noncurrent-state-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = var.noncurrent_version_retention_days
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+# Запрет любых обращений к бакету по незашифрованному каналу
+data "aws_iam_policy_document" "tfstate" {
+  statement {
+    sid    = "DenyInsecureTransport"
+    effect = "Deny"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = ["s3:*"]
+
+    resources = [
+      aws_s3_bucket.tfstate.arn,
+      "${aws_s3_bucket.tfstate.arn}/*",
+    ]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "tfstate" {
+  bucket = aws_s3_bucket.tfstate.id
+  policy = data.aws_iam_policy_document.tfstate.json
+
+  depends_on = [aws_s3_bucket_public_access_block.tfstate]
+}
