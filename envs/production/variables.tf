@@ -7,7 +7,7 @@ variable "project" {
 variable "environment" {
   description = "Имя окружения"
   type        = string
-  default     = "staging"
+  default     = "production"
 }
 
 variable "aws_region" {
@@ -25,7 +25,7 @@ variable "zone_name" {
 variable "vpc_cidr" {
   description = "Диапазон адресов VPC"
   type        = string
-  default     = "10.10.0.0/16"
+  default     = "10.20.0.0/16"
 }
 
 variable "az_count" {
@@ -35,27 +35,25 @@ variable "az_count" {
 }
 
 variable "single_nat_gateway" {
-  description = "Один NAT: экономия важнее устойчивости"
+  description = "NAT в каждой зоне вместо одного"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "flow_logs_retention_days" {
   description = "Хранение flow logs, дней"
   type        = number
-  default     = 7
+  default     = 30
 }
 
 variable "container_image" {
-  description = "Образ WordPress из ECR"
+  description = "Образ, проверенный в staging; с дайджестом"
   type        = string
-  default     = "756250138234.dkr.ecr.eu-central-1.amazonaws.com/wp/wordpress:sha-67e4481"
 }
 
 variable "app_version" {
   description = "Версия приложения"
   type        = string
-  default     = "sha-67e4481"
 }
 
 variable "service_desired_count" {
@@ -73,13 +71,13 @@ variable "service_min_capacity" {
 variable "service_max_capacity" {
   description = "Верхняя граница числа задач"
   type        = number
-  default     = 4
+  default     = 6
 }
 
 variable "log_retention_days" {
   description = "Хранение логов, дней"
   type        = number
-  default     = 7
+  default     = 90
 }
 
 variable "container_insights" {
@@ -88,34 +86,34 @@ variable "container_insights" {
   default     = "enabled"
 }
 
+variable "deletion_protection" {
+  description = "Запрет удаления; блокирует terraform destroy"
+  type        = bool
+  default     = true
+}
+
 variable "db_instance_count" {
   description = "Число инстансов базы"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "db_min_capacity" {
-  description = "Минимум ACU; 0 включает авто-паузу"
+  description = "Минимум ACU; ненулевой, чтобы не было пробуждения"
   type        = number
-  default     = 0
+  default     = 0.5
 }
 
 variable "db_max_capacity" {
   description = "Максимум ACU"
   type        = number
-  default     = 2
-}
-
-variable "db_seconds_until_auto_pause" {
-  description = "Простой до паузы, секунд"
-  type        = number
-  default     = 3600
+  default     = 8
 }
 
 variable "db_backup_retention_days" {
   description = "Хранение бэкапов, дней"
   type        = number
-  default     = 1
+  default     = 30
 }
 
 variable "alarm_emails" {

@@ -1,26 +1,16 @@
+output "site_url" {
+  description = "Адрес окружения"
+  value       = module.service.site_url
+}
+
 output "vpc_id" {
   description = "Идентификатор VPC"
   value       = module.network.vpc_id
 }
 
-output "private_subnet_ids" {
-  description = "Подсети задач"
-  value       = module.network.private_subnet_ids
-}
-
-output "isolated_subnet_ids" {
-  description = "Подсети базы и EFS"
-  value       = module.network.isolated_subnet_ids
-}
-
 output "nat_public_ips" {
   description = "Внешние адреса NAT"
   value       = module.network.nat_public_ips
-}
-
-output "site_url" {
-  description = "Адрес окружения"
-  value       = module.service.site_url
 }
 
 output "ecs_cluster" {
@@ -38,6 +28,16 @@ output "log_group" {
   value       = module.service.log_group_name
 }
 
+output "db_writer_endpoint" {
+  description = "Адрес записи"
+  value       = module.database.writer_endpoint
+}
+
+output "db_reader_endpoint" {
+  description = "Адрес чтения"
+  value       = module.database.reader_endpoint
+}
+
 output "admin_secret_arn" {
   description = "Секрет администратора WordPress"
   value       = module.service.admin_secret_arn
@@ -52,29 +52,4 @@ output "maintenance_task_args" {
     subnets         = join(",", module.network.private_subnet_ids)
     security_group  = module.network.ecs_security_group_id
   }
-}
-
-output "certificate_arn" {
-  description = "Сертификат для listener'а"
-  value       = module.dns.certificate_arn
-}
-
-output "db_writer_endpoint" {
-  description = "Адрес базы"
-  value       = module.database.writer_endpoint
-}
-
-output "efs_file_system_id" {
-  description = "Файловая система загрузок"
-  value       = module.storage.file_system_id
-}
-
-output "efs_access_point_id" {
-  description = "Access point загрузок"
-  value       = module.storage.access_point_id
-}
-
-output "db_secret_arn" {
-  description = "Секрет с паролем базы"
-  value       = module.database.master_user_secret_arn
 }

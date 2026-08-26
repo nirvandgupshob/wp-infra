@@ -1,14 +1,10 @@
 variable "name_prefix" {
-  description = "Префикс имён ресурсов, например wp-staging."
+  description = "Префикс имён ресурсов"
   type        = string
 }
 
 variable "subnet_ids" {
-  description = <<-EOT
-    Подсети для точек монтирования — те же изолированные, где стоит база.
-    В каждой зоне доступности EFS допускает ровно одну точку монтирования,
-    поэтому подсети должны быть из разных зон.
-  EOT
+  description = "Подсети точек монтирования, по одной на зону"
   type        = list(string)
 
   validation {
@@ -18,33 +14,24 @@ variable "subnet_ids" {
 }
 
 variable "security_group_ids" {
-  description = "Группы безопасности точек монтирования. Ожидается та, что пускает 2049 только из группы задач ECS."
+  description = "Группы безопасности EFS"
   type        = list(string)
 }
 
 variable "posix_uid" {
-  description = <<-EOT
-    Идентификатор пользователя, от имени которого задача работает с файлами.
-    33 — это www-data, от которого работает контейнер WordPress.
-    При несовпадении WordPress не сможет сохранить ни одной картинки,
-    причём молча: ошибка уйдёт в лог, а пользователь увидит просто сбой загрузки.
-  EOT
+  description = "uid владельца файлов; 33 это www-data"
   type        = number
   default     = 33
 }
 
 variable "posix_gid" {
-  description = "Идентификатор группы. 33 — www-data."
+  description = "gid владельца файлов"
   type        = number
   default     = 33
 }
 
 variable "root_directory" {
-  description = <<-EOT
-    Каталог внутри файловой системы, который access point показывает задаче
-    как корень. Не «/» намеренно: для корня EFS не применяет creation_info,
-    и каталог остался бы с владельцем root.
-  EOT
+  description = "Корень access point, не /"
   type        = string
   default     = "/uploads"
 
@@ -55,19 +42,19 @@ variable "root_directory" {
 }
 
 variable "transition_to_ia" {
-  description = "Через сколько неиспользования файл переезжает в дешёвый класс хранения. Старые медиафайлы читаются редко."
+  description = "Переезд в дешёвый класс хранения"
   type        = string
   default     = "AFTER_30_DAYS"
 }
 
 variable "enable_backup" {
-  description = "Ежедневные резервные копии через AWS Backup. Для загрузок пользователей это единственная защита: в отличие от базы, у EFS нет восстановления на момент времени по умолчанию."
+  description = "Ежедневные резервные копии"
   type        = bool
   default     = true
 }
 
 variable "enforce_tls" {
-  description = "Запретить обращения к файловой системе без шифрования канала."
+  description = "Требовать шифрование канала"
   type        = bool
   default     = true
 }

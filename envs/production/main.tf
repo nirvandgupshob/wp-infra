@@ -1,15 +1,16 @@
 locals {
   name_prefix = "${var.project}-${var.environment}"
 
-  site_domain = "${var.environment}.${var.zone_name}"
+  site_domains = [var.zone_name, "www.${var.zone_name}"]
 }
 
 module "dns" {
   source = "../../modules/dns"
 
-  name_prefix              = local.name_prefix
-  zone_name                = var.zone_name
-  certificate_domain_names = [local.site_domain]
+  name_prefix = local.name_prefix
+  zone_name   = var.zone_name
+
+  certificate_domain_names = local.site_domains
 }
 
 module "network" {
@@ -20,6 +21,41 @@ module "network" {
   az_count                 = var.az_count
   single_nat_gateway       = var.single_nat_gateway
   flow_logs_retention_days = var.flow_logs_retention_days
+}
+
+module "storage" {
+  source = "../../modules/storage"
+
+  name_prefix        = local.name_prefix
+  subnet_ids         = module.network.isolated_subnet_ids
+  security_group_ids = [module.network.efs_security_group_id]
+
+  posix_uid = 33
+  posix_gid = 33
+
+  enable_backup = true
+}
+
+module "database" {
+  source = "../../modules/database"
+
+  name_prefix        = local.name_prefix
+  subnet_ids         = module.network.isolated_subnet_ids
+  availability_zones = module.network.availability_zones
+  security_group_ids = [module.network.db_security_group_id]
+
+  instance_count = var.db_instance_count
+
+  min_capacity = var.db_min_capacity
+  max_capacity = var.db_max_capacity
+
+  backup_retention_days = var.db_backup_retention_days
+
+  deletion_protection = var.deletion_protection
+
+  skip_final_snapshot = false
+
+  apply_immediately = false
 }
 
 module "service" {
@@ -35,7 +71,7 @@ module "service" {
   ecs_security_group_id = module.network.ecs_security_group_id
 
   route53_zone_id = module.dns.zone_id
-  dns_names       = [local.site_domain]
+  dns_names       = local.site_domains
   certificate_arn = module.dns.certificate_arn
 
   container_image = var.container_image
@@ -58,41 +94,11 @@ module "service" {
   log_retention_days = var.log_retention_days
   container_insights = var.container_insights
 
-  deletion_protection = false
-}
+  deletion_protection = var.deletion_protection
 
-module "storage" {
-  source = "../../modules/storage"
+  secret_recovery_days = 7
 
-  name_prefix        = local.name_prefix
-  subnet_ids         = module.network.isolated_subnet_ids
-  security_group_ids = [module.network.efs_security_group_id]
-
-  posix_uid = 33
-  posix_gid = 33
-
-  enable_backup = false
-}
-
-module "database" {
-  source = "../../modules/database"
-
-  name_prefix        = local.name_prefix
-  subnet_ids         = module.network.isolated_subnet_ids
-  availability_zones = module.network.availability_zones
-  security_group_ids = [module.network.db_security_group_id]
-
-  instance_count = var.db_instance_count
-
-  min_capacity             = var.db_min_capacity
-  max_capacity             = var.db_max_capacity
-  seconds_until_auto_pause = var.db_seconds_until_auto_pause
-
-  backup_retention_days = var.db_backup_retention_days
-
-  deletion_protection = false
-  skip_final_snapshot = true
-  apply_immediately   = true
+  admin_email = "admin@${var.zone_name}"
 }
 
 module "observability" {
@@ -116,6 +122,6 @@ module "observability" {
   db_cluster_identifier = module.database.cluster_identifier
   db_max_capacity       = var.db_max_capacity
 
-  site_domain   = local.site_domain
+  site_domain   = local.site_domains[0]
   desired_count = var.service_min_capacity
 }

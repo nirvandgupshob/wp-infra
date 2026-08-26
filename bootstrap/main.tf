@@ -22,8 +22,6 @@ resource "aws_s3_bucket" "tfstate" {
   }
 }
 
-# Хранение всех версий объекта. Испорченный state откатывается
-# восстановлением предыдущей версии файла
 resource "aws_s3_bucket_versioning" "tfstate" {
   bucket = aws_s3_bucket.tfstate.id
 
@@ -41,7 +39,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
       kms_master_key_id = aws_kms_key.tfstate.arn
     }
 
-    # S3 Bucket Keys сокращают число обращений к KMS и его стоимость
     bucket_key_enabled = true
   }
 }
@@ -55,7 +52,6 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
   restrict_public_buckets = true
 }
 
-# Каждый apply создаёт новую версию state. Без уборки старые версии копятся бесконечно
 resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
   bucket = aws_s3_bucket.tfstate.id
 
@@ -75,7 +71,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
   }
 }
 
-# Запрет любых обращений к бакету по незашифрованному каналу
 data "aws_iam_policy_document" "tfstate" {
   statement {
     sid    = "DenyInsecureTransport"

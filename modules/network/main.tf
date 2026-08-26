@@ -1,21 +1,6 @@
-# ---------------------------------------------------------------------------
-# Сеть: VPC, три яруса подсетей, маршрутизация, S3-эндпоинт, flow logs.
-#
-# Ярусы различаются ровно тем, какой у них маршрут по умолчанию:
-#   public   -> Internet Gateway   (вход и выход) — только ALB и NAT
-#   private  -> NAT Gateway        (только выход) — задачи ECS
-#   isolated -> маршрута наружу нет                — Aurora и EFS
-#
-# То есть изоляция базы обеспечена не только security group, но и самим
-# отсутствием маршрута: даже ошибочно выданный публичный адрес не сделает
-# её достижимой.
-# ---------------------------------------------------------------------------
-
 data "aws_availability_zones" "available" {
   state = "available"
 
-  # Зоны, требующие явного включения в аккаунте, отсеиваем: обращение
-  # к ним упало бы уже на этапе создания подсети.
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
@@ -27,9 +12,6 @@ data "aws_region" "current" {}
 locals {
   azs = slice(data.aws_availability_zones.available.names, 0, var.az_count)
 
-  # Раскладка /24 внутри /16. Индексы разнесены по десяткам, чтобы ярус
-  # читался прямо из адреса: 10.0.0.x — public, 10.0.1x.x — private,
-  # 10.0.2x.x — isolated. Диагностировать по логам заметно легче.
   public_subnets   = [for i in range(var.az_count) : cidrsubnet(var.vpc_cidr, 8, i)]
   private_subnets  = [for i in range(var.az_count) : cidrsubnet(var.vpc_cidr, 8, 10 + i)]
   isolated_subnets = [for i in range(var.az_count) : cidrsubnet(var.vpc_cidr, 8, 20 + i)]
@@ -37,19 +19,15 @@ locals {
   nat_count = var.single_nat_gateway ? 1 : var.az_count
 }
 
-# --- VPC --------------------------------------------------------------------
 resource "aws_vpc" "this" {
   cidr_block = var.vpc_cidr
 
-  # Нужны обе опции: без них не резолвятся приватные DNS-имена сервисов AWS
-  # и эндпоинт Aurora.
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = { Name = var.name_prefix }
 }
 
-# --- Подсети ----------------------------------------------------------------
 resource "aws_subnet" "public" {
   count = var.az_count
 
@@ -57,8 +35,6 @@ resource "aws_subnet" "public" {
   cidr_block        = local.public_subnets[count.index]
   availability_zone = local.azs[count.index]
 
-  # Автоматический публичный адрес не нужен: у ALB свои адреса,
-  # у NAT — явный Elastic IP. Ничего другого сюда не попадает.
   map_public_ip_on_launch = false
 
   tags = {
@@ -93,7 +69,6 @@ resource "aws_subnet" "isolated" {
   }
 }
 
-# --- Выход в интернет -------------------------------------------------------
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
@@ -107,7 +82,6 @@ resource "aws_eip" "nat" {
 
   tags = { Name = "${var.name_prefix}-nat-${count.index}" }
 
-  # EIP бесполезен, пока не создан IGW: NAT без него не заработает.
   depends_on = [aws_internet_gateway.this]
 }
 
@@ -122,8 +96,6 @@ resource "aws_nat_gateway" "this" {
   depends_on = [aws_internet_gateway.this]
 }
 
-# --- Маршрутизация ----------------------------------------------------------
-# Public: одна таблица на все зоны — маршрут в IGW везде одинаковый.
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
@@ -143,9 +115,6 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Private: таблица на каждую зону, даже когда NAT один.
-# Так переключение single_nat_gateway в false меняет только адресата
-# маршрута, а не структуру ресурсов — то есть не пересоздаёт подсети.
 resource "aws_route_table" "private" {
   count = var.az_count
 
@@ -160,7 +129,6 @@ resource "aws_route" "private_default" {
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
 
-  # При одном NAT все зоны ходят через него; при NAT на зону — каждая через свой.
   nat_gateway_id = aws_nat_gateway.this[var.single_nat_gateway ? 0 : count.index].id
 }
 
@@ -171,8 +139,6 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-# Isolated: таблица без маршрута по умолчанию. Работает только local-маршрут
-# внутри VPC, который AWS добавляет сам. Это и есть изоляция.
 resource "aws_route_table" "isolated" {
   vpc_id = aws_vpc.this.id
 
@@ -186,13 +152,6 @@ resource "aws_route_table_association" "isolated" {
   route_table_id = aws_route_table.isolated.id
 }
 
-# --- S3 gateway endpoint ----------------------------------------------------
-# Бесплатен и берётся всегда: слои образов ECR лежат в S3, и это основной
-# объём исходящего трафика задач. Через эндпоинт он идёт по внутренней сети
-# AWS, минуя NAT — то есть не тарифицируется как обработка трафика.
-#
-# Это gateway-эндпоинт: он не создаёт сетевых интерфейсов и не стоит денег,
-# в отличие от интерфейсных эндпоинтов для ECR/Logs/Secrets Manager.
 resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.this.id
   service_name      = "com.amazonaws.${data.aws_region.current.region}.s3"
@@ -206,10 +165,6 @@ resource "aws_vpc_endpoint" "s3" {
   tags = { Name = "${var.name_prefix}-s3" }
 }
 
-# --- Flow logs --------------------------------------------------------------
-# Журнал разрешённых и отброшенных соединений. Без него на вопрос «почему
-# задача не достучалась до базы» отвечать нечем: security group молча
-# отбрасывает пакет, приложение видит только таймаут.
 resource "aws_cloudwatch_log_group" "flow_logs" {
   count = var.enable_flow_logs ? 1 : 0
 
@@ -245,7 +200,6 @@ data "aws_iam_policy_document" "flow_logs" {
       "logs:DescribeLogStreams",
     ]
 
-    # Права ограничены одной конкретной группой логов, а не всеми.
     resources = ["${aws_cloudwatch_log_group.flow_logs[0].arn}:*"]
   }
 }

@@ -1,10 +1,10 @@
 variable "name_prefix" {
-  description = "Префикс имён ресурсов, например wp-staging."
+  description = "Префикс имён ресурсов"
   type        = string
 }
 
 variable "subnet_ids" {
-  description = "Изолированные подсети — те, у которых нет маршрута наружу. База не должна стоять нигде больше."
+  description = "Изолированные подсети, минимум две зоны"
   type        = list(string)
 
   validation {
@@ -14,33 +14,29 @@ variable "subnet_ids" {
 }
 
 variable "availability_zones" {
-  description = "Зоны в том же порядке, что и подсети. Используются, чтобы явно развести инстансы по зонам."
+  description = "Зоны в порядке подсетей"
   type        = list(string)
 }
 
 variable "security_group_ids" {
-  description = "Группы безопасности базы. Ожидается та, что пускает 3306 только из группы задач ECS."
+  description = "Группы безопасности базы"
   type        = list(string)
 }
 
 variable "engine_version" {
-  description = <<-EOT
-    Версия Aurora MySQL. Проверено, что 8.4 поддерживает минимум в 0 ACU:
-    в ответе describe-db-engine-versions поле ServerlessV2FeaturesSupport
-    показывает MinCapacity = 0.
-  EOT
+  description = "Версия Aurora MySQL"
   type        = string
   default     = "8.4.mysql_aurora.8.4.7"
 }
 
 variable "database_name" {
-  description = "Имя базы, которую создаст Aurora при первом запуске."
+  description = "Имя базы"
   type        = string
   default     = "wordpress"
 }
 
 variable "master_username" {
-  description = "Главный пользователь. Имена admin, rdsadmin и root в MySQL зарезервированы и будут отвергнуты."
+  description = "Главный пользователь"
   type        = string
   default     = "wpadmin"
 
@@ -51,12 +47,7 @@ variable "master_username" {
 }
 
 variable "min_capacity" {
-  description = <<-EOT
-    Нижняя граница мощности в ACU. Ноль означает авто-паузу при простое:
-    база перестаёт тарифицироваться совсем. Плата за это — первый запрос
-    после паузы ждёт пробуждения порядка 15 секунд, поэтому в production
-    ставится ненулевое значение.
-  EOT
+  description = "Минимум ACU; 0 включает авто-паузу"
   type        = number
   default     = 0
 
@@ -67,13 +58,13 @@ variable "min_capacity" {
 }
 
 variable "max_capacity" {
-  description = "Верхняя граница мощности в ACU. Ограничивает и производительность, и максимальный счёт."
+  description = "Максимум ACU"
   type        = number
   default     = 4
 }
 
 variable "seconds_until_auto_pause" {
-  description = "Сколько секунд простоя до паузы. Работает только при min_capacity = 0."
+  description = "Простой до паузы, секунд; только при min_capacity 0"
   type        = number
   default     = 3600
 
@@ -84,11 +75,7 @@ variable "seconds_until_auto_pause" {
 }
 
 variable "instance_count" {
-  description = <<-EOT
-    Число инстансов в кластере. Один — только writer, отказ его зоны означает
-    простой на время восстановления. Два — writer и reader в разных зонах,
-    с автоматическим failover. Для production нужно минимум два.
-  EOT
+  description = "Число инстансов; для failover нужно два"
   type        = number
   default     = 1
 
@@ -99,7 +86,7 @@ variable "instance_count" {
 }
 
 variable "backup_retention_days" {
-  description = "Срок хранения автоматических бэкапов. Он же — глубина восстановления на момент времени (PITR)."
+  description = "Хранение бэкапов и глубина PITR, дней"
   type        = number
   default     = 7
 
@@ -110,25 +97,25 @@ variable "backup_retention_days" {
 }
 
 variable "deletion_protection" {
-  description = "Запрет удаления кластера через API. В production обязателен."
+  description = "Запрет удаления кластера"
   type        = bool
   default     = false
 }
 
 variable "skip_final_snapshot" {
-  description = "Не делать снимок при удалении. Допустимо только для staging, который сносится намеренно."
+  description = "Не делать снимок при удалении"
   type        = bool
   default     = true
 }
 
 variable "apply_immediately" {
-  description = "Применять изменения сразу, а не в окно обслуживания. В staging удобно, в production ведёт к незапланированным перезапускам."
+  description = "Применять изменения сразу, а не в окно обслуживания"
   type        = bool
   default     = false
 }
 
 variable "slow_query_seconds" {
-  description = "Порог, с которого запрос считается медленным и попадает в лог."
+  description = "Порог медленного запроса, секунд"
   type        = number
   default     = 2
 }

@@ -1,5 +1,5 @@
 variable "project" {
-  description = "Короткий префикс проекта"
+  description = "Префикс проекта"
   type        = string
   default     = "wp"
 
@@ -10,13 +10,13 @@ variable "project" {
 }
 
 variable "aws_region" {
-  description = "Регион, в котором создаётся бакет со state, Должен совпадать с регионом инфраструктуры"
+  description = "Регион AWS"
   type        = string
   default     = "eu-central-1"
 }
 
 variable "noncurrent_version_retention_days" {
-  description = "Сколько дней хранить предыдущие версии state-файла перед удалением."
+  description = "Хранение прошлых версий state, дней"
   type        = number
   default     = 30
 }

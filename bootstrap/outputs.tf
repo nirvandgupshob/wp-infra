@@ -1,20 +1,20 @@
 output "state_bucket" {
-  description = "Имя бакета со state"
+  description = "Бакет со state"
   value       = aws_s3_bucket.tfstate.id
 }
 
 output "state_kms_key_arn" {
-  description = "ARN ключа шифрования state"
+  description = "Ключ шифрования state"
   value       = aws_kms_key.tfstate.arn
 }
 
 output "ecr_repository_url" {
-  description = "Адрес реестра образов. Один на все окружения."
+  description = "Адрес реестра образов"
   value       = aws_ecr_repository.wordpress.repository_url
 }
 
 output "ecr_repository_arn" {
-  description = "ARN реестра. Нужен в политике роли выполнения задачи ECS."
+  description = "ARN реестра"
   value       = aws_ecr_repository.wordpress.arn
 }
 

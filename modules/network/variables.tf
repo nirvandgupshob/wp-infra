@@ -1,5 +1,5 @@
 variable "name_prefix" {
-  description = "Префикс имён ресурсов, например wp-staging. Задаётся окружением."
+  description = "Префикс имён ресурсов"
   type        = string
 
   validation {
@@ -9,7 +9,7 @@ variable "name_prefix" {
 }
 
 variable "vpc_cidr" {
-  description = "Диапазон адресов VPC. Должен быть /16, чтобы хватило на три яруса подсетей."
+  description = "Диапазон адресов VPC, не уже /16"
   type        = string
   default     = "10.0.0.0/16"
 
@@ -20,7 +20,7 @@ variable "vpc_cidr" {
 }
 
 variable "az_count" {
-  description = "Сколько зон доступности задействовать. Минимум две, иначе отказоустойчивости нет."
+  description = "Число зон доступности"
   type        = number
   default     = 2
 
@@ -31,36 +31,31 @@ variable "az_count" {
 }
 
 variable "single_nat_gateway" {
-  description = <<-EOT
-    true — один NAT на всё окружение (дешевле примерно на $38/мес за каждую
-    сэкономленную зону, но при отказе его зоны задачи в других зонах теряют
-    исходящий доступ; входящий трафик и сайт продолжают работать).
-    false — по NAT в каждой зоне, как положено в продакшене.
-  EOT
+  description = "Один NAT вместо одного на зону"
   type        = bool
   default     = true
 }
 
 variable "enable_flow_logs" {
-  description = "Журналировать разрешённые и отброшенные соединения VPC в CloudWatch."
+  description = "Журналировать соединения VPC"
   type        = bool
   default     = true
 }
 
 variable "flow_logs_retention_days" {
-  description = "Срок хранения flow logs. Без ограничения логи копятся вечно и тарифицируются."
+  description = "Хранение flow logs, дней"
   type        = number
   default     = 7
 }
 
 variable "container_port" {
-  description = "Порт, который слушает контейнер WordPress. Не 80: контейнер работает без прав root."
+  description = "Порт контейнера"
   type        = number
   default     = 8080
 }
 
 variable "db_port" {
-  description = "Порт Aurora MySQL."
+  description = "Порт базы"
   type        = number
   default     = 3306
 }

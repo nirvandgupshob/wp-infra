@@ -6,11 +6,16 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.61"
     }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
+    }
   }
 
   backend "s3" {
     bucket       = "wp-tfstate-756250138234"
-    key          = "staging/terraform.tfstate"
+    key          = "production/terraform.tfstate"
     region       = "eu-central-1"
     encrypt      = true
     kms_key_id   = "arn:aws:kms:eu-central-1:756250138234:key/8d2b267a-4781-4560-81b9-e78591e3ec36"
