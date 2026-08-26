@@ -8,6 +8,16 @@ output "state_kms_key_arn" {
   value       = aws_kms_key.tfstate.arn
 }
 
+output "ecr_repository_url" {
+  description = "Адрес реестра образов. Один на все окружения."
+  value       = aws_ecr_repository.wordpress.repository_url
+}
+
+output "ecr_repository_arn" {
+  description = "ARN реестра. Нужен в политике роли выполнения задачи ECS."
+  value       = aws_ecr_repository.wordpress.arn
+}
+
 output "backend_config" {
   value = <<-EOT
     terraform {

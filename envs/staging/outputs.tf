@@ -33,6 +33,16 @@ output "db_writer_endpoint" {
   value       = module.database.writer_endpoint
 }
 
+output "efs_file_system_id" {
+  description = "Файловая система для загрузок WordPress."
+  value       = module.storage.file_system_id
+}
+
+output "efs_access_point_id" {
+  description = "Access point, через который задача монтирует каталог загрузок."
+  value       = module.storage.access_point_id
+}
+
 output "db_secret_arn" {
   description = "Секрет с паролем базы. Значение достаётся задачей ECS, в state его нет."
   value       = module.database.master_user_secret_arn

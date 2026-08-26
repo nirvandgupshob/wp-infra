@@ -32,6 +32,23 @@ module "network" {
   flow_logs_retention_days = var.flow_logs_retention_days
 }
 
+module "storage" {
+  source = "../../modules/storage"
+
+  name_prefix        = local.name_prefix
+  subnet_ids         = module.network.isolated_subnet_ids
+  security_group_ids = [module.network.efs_security_group_id]
+
+  # 33 — это www-data, от которого работает контейнер WordPress.
+  # Совпадение обязательно, иначе загрузка файлов молча ломается.
+  posix_uid = 33
+  posix_gid = 33
+
+  # В staging резервные копии загрузок не нужны: окружение сносится
+  # намеренно, а содержимое воспроизводится сидированием.
+  enable_backup = false
+}
+
 module "database" {
   source = "../../modules/database"
 
