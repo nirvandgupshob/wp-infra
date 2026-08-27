@@ -76,6 +76,7 @@ jobs:
       - name: Plan
         id: plan
         run: |
+          set -o pipefail
           cd "envs/${{ matrix.environment }}"
           terraform init -input=false
           terraform plan -input=false -lock=false -no-color -out=tfplan 2>&1 | tee plan.txt
