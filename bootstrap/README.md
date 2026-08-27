@@ -15,7 +15,7 @@
 | Bucket policy `DenyInsecureTransport` | запрет обращений не по TLS |
 | Lifecycle rule | старые версии state удаляются через 30 дней |
 
-Блокировка параллельных запусков — нативная через S3 (`use_lockfile = true`, Terraform ≥ 1.10). Отдельная таблица DynamoDB, как в старых руководствах, не нужна.
+Блокировка параллельных запусков — нативная через S3 (`use_lockfile = true`, Terraform ≥ 1.10).
 
 ## Порядок применения
 

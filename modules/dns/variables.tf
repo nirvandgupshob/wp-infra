@@ -1,25 +1,25 @@
 variable "name_prefix" {
-  description = "Префикс имён ресурсов"
+  description = "Resource name prefix"
   type        = string
 }
 
 variable "zone_name" {
-  description = "Существующая hosted zone; модуль её не создаёт"
+  description = "Existing hosted zone; the module does not create it"
   type        = string
 }
 
 variable "certificate_domain_names" {
-  description = "Имена в сертификате, первое основное"
+  description = "Certificate domain names, the first one is primary"
   type        = list(string)
 
   validation {
     condition     = length(var.certificate_domain_names) > 0
-    error_message = "Нужно хотя бы одно имя."
+    error_message = "At least one domain name is required."
   }
 }
 
 variable "validation_timeout" {
-  description = "Таймаут подтверждения сертификата"
+  description = "Certificate validation timeout"
   type        = string
   default     = "10m"
 }

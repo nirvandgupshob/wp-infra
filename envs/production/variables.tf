@@ -1,125 +1,125 @@
 variable "project" {
-  description = "Префикс проекта"
+  description = "Project prefix"
   type        = string
   default     = "wp"
 }
 
 variable "environment" {
-  description = "Имя окружения"
+  description = "Environment name"
   type        = string
   default     = "production"
 }
 
 variable "aws_region" {
-  description = "Регион AWS"
+  description = "AWS region"
   type        = string
   default     = "eu-central-1"
 }
 
 variable "zone_name" {
-  description = "Hosted zone в Route53"
+  description = "Route53 hosted zone"
   type        = string
   default     = "wp-demo-bogdan.click"
 }
 
 variable "vpc_cidr" {
-  description = "Диапазон адресов VPC"
+  description = "VPC CIDR block"
   type        = string
   default     = "10.20.0.0/16"
 }
 
 variable "az_count" {
-  description = "Число зон доступности"
+  description = "Number of availability zones"
   type        = number
   default     = 2
 }
 
 variable "single_nat_gateway" {
-  description = "NAT в каждой зоне вместо одного"
+  description = "One NAT per availability zone instead of a single one"
   type        = bool
   default     = false
 }
 
 variable "flow_logs_retention_days" {
-  description = "Хранение flow logs, дней"
+  description = "Flow logs retention, days"
   type        = number
   default     = 30
 }
 
 variable "container_image" {
-  description = "Начальный образ задачи; дальше им управляет пайплайн приложения"
+  description = "WordPress image from ECR"
   type        = string
   default     = "756250138234.dkr.ecr.eu-central-1.amazonaws.com/wp/wordpress:theme-132243"
 }
 
 variable "app_version" {
-  description = "Версия приложения"
+  description = "Application version"
   type        = string
   default     = "theme-132243"
 }
 
 variable "service_desired_count" {
-  description = "Начальное число задач"
+  description = "Initial task count"
   type        = number
   default     = 2
 }
 
 variable "service_min_capacity" {
-  description = "Нижняя граница числа задач"
+  description = "Minimum task count"
   type        = number
   default     = 2
 }
 
 variable "service_max_capacity" {
-  description = "Верхняя граница числа задач"
+  description = "Maximum task count"
   type        = number
   default     = 6
 }
 
 variable "log_retention_days" {
-  description = "Хранение логов, дней"
+  description = "Log retention, days"
   type        = number
   default     = 90
 }
 
 variable "container_insights" {
-  description = "Подробные метрики ECS"
+  description = "ECS Container Insights"
   type        = string
   default     = "enabled"
 }
 
 variable "deletion_protection" {
-  description = "Запрет удаления; блокирует terraform destroy"
+  description = "Deletion protection for the load balancer and database"
   type        = bool
   default     = true
 }
 
 variable "db_instance_count" {
-  description = "Число инстансов базы"
+  description = "Database instance count"
   type        = number
   default     = 2
 }
 
 variable "db_min_capacity" {
-  description = "Минимум ACU; ненулевой, чтобы не было пробуждения"
+  description = "Minimum ACU"
   type        = number
   default     = 0.5
 }
 
 variable "db_max_capacity" {
-  description = "Максимум ACU"
+  description = "Maximum ACU"
   type        = number
   default     = 8
 }
 
 variable "db_backup_retention_days" {
-  description = "Хранение бэкапов, дней"
+  description = "Backup retention, days"
   type        = number
   default     = 30
 }
 
 variable "alarm_emails" {
-  description = "Адреса для уведомлений; подписку нужно подтвердить письмом"
+  description = "Alert recipients; each subscription must be confirmed by email"
   type        = list(string)
   default     = []
 }

@@ -1,25 +1,25 @@
 output "sns_topic_arn" {
-  description = "Топик уведомлений"
+  description = "Alerts topic"
   value       = aws_sns_topic.alerts.arn
 }
 
 output "dashboard_url" {
-  description = "Ссылка на дашборд"
+  description = "Dashboard URL"
   value       = "https://${local.region}.console.aws.amazon.com/cloudwatch/home?region=${local.region}#dashboards/dashboard/${aws_cloudwatch_dashboard.this.dashboard_name}"
 }
 
 output "composite_alarm_name" {
-  description = "Сводный аларм недоступности"
+  description = "Composite outage alarm"
   value       = aws_cloudwatch_composite_alarm.service_down.alarm_name
 }
 
 output "health_check_id" {
-  description = "Внешняя проверка Route53"
+  description = "Route53 health check"
   value       = var.enable_health_check ? aws_route53_health_check.site[0].id : null
 }
 
 output "alarm_names" {
-  description = "Все алармы окружения"
+  description = "All alarms of the environment"
   value = concat(
     [
       aws_cloudwatch_metric_alarm.no_healthy_hosts.alarm_name,

@@ -1,44 +1,44 @@
 output "writer_endpoint" {
-  description = "Адрес записи"
+  description = "Writer endpoint"
   value       = aws_rds_cluster.this.endpoint
 }
 
 output "reader_endpoint" {
-  description = "Адрес чтения"
+  description = "Reader endpoint"
   value       = aws_rds_cluster.this.reader_endpoint
 }
 
 output "port" {
-  description = "Порт"
+  description = "Port"
   value       = aws_rds_cluster.this.port
 }
 
 output "database_name" {
-  description = "Имя базы"
+  description = "Database name"
   value       = aws_rds_cluster.this.database_name
 }
 
 output "master_username" {
-  description = "Главный пользователь"
+  description = "Master username"
   value       = aws_rds_cluster.this.master_username
 }
 
 output "master_user_secret_arn" {
-  description = "Секрет с учётными данными"
+  description = "Credentials secret"
   value       = aws_rds_cluster.this.master_user_secret[0].secret_arn
 }
 
 output "master_user_secret_kms_key_arn" {
-  description = "Ключ шифрования секрета"
+  description = "Secret encryption key"
   value       = aws_rds_cluster.this.master_user_secret[0].kms_key_id
 }
 
 output "cluster_identifier" {
-  description = "Идентификатор кластера"
+  description = "Cluster identifier"
   value       = aws_rds_cluster.this.cluster_identifier
 }
 
 output "cluster_resource_id" {
-  description = "Внутренний идентификатор кластера"
+  description = "Cluster resource id"
   value       = aws_rds_cluster.this.cluster_resource_id
 }

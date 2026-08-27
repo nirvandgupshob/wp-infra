@@ -1,50 +1,50 @@
 output "site_url" {
-  description = "Адрес окружения"
+  description = "Environment URL"
   value       = module.service.site_url
 }
 
 output "vpc_id" {
-  description = "Идентификатор VPC"
+  description = "VPC id"
   value       = module.network.vpc_id
 }
 
 output "nat_public_ips" {
-  description = "Внешние адреса NAT"
+  description = "NAT public addresses"
   value       = module.network.nat_public_ips
 }
 
 output "ecs_cluster" {
-  description = "Кластер ECS"
+  description = "ECS cluster"
   value       = module.service.cluster_name
 }
 
 output "ecs_service" {
-  description = "Сервис ECS"
+  description = "ECS service"
   value       = module.service.service_name
 }
 
 output "log_group" {
-  description = "Группа логов"
+  description = "Log group"
   value       = module.service.log_group_name
 }
 
 output "db_writer_endpoint" {
-  description = "Адрес записи"
+  description = "Writer endpoint"
   value       = module.database.writer_endpoint
 }
 
 output "db_reader_endpoint" {
-  description = "Адрес чтения"
+  description = "Reader endpoint"
   value       = module.database.reader_endpoint
 }
 
 output "admin_secret_arn" {
-  description = "Секрет администратора WordPress"
+  description = "WordPress administrator secret"
   value       = module.service.admin_secret_arn
 }
 
 output "maintenance_task_args" {
-  description = "Параметры запуска разовой задачи"
+  description = "Arguments for running a one-off task"
   value = {
     cluster         = module.service.cluster_name
     task_definition = module.service.task_definition_family

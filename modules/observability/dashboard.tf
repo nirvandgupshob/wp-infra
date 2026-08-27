@@ -14,17 +14,17 @@ locals {
       width  = 12
       height = 6
       properties = {
-        title  = "Запросы и ошибки"
+        title  = "Requests and errors"
         region = local.region
         view   = "timeSeries"
         stat   = "Sum"
         period = 60
         metrics = [
-          concat(["AWS/ApplicationELB", "RequestCount"], local.alb, [{ label = "запросов" }]),
+          concat(["AWS/ApplicationELB", "RequestCount"], local.alb, [{ label = "requests" }]),
           concat(["AWS/ApplicationELB", "HTTPCode_Target_2XX_Count"], local.target, [{ label = "2xx" }]),
           concat(["AWS/ApplicationELB", "HTTPCode_Target_4XX_Count"], local.target, [{ label = "4xx" }]),
-          concat(["AWS/ApplicationELB", "HTTPCode_Target_5XX_Count"], local.target, [{ label = "5xx приложения" }]),
-          concat(["AWS/ApplicationELB", "HTTPCode_ELB_5XX_Count"], local.alb, [{ label = "5xx балансировщика" }]),
+          concat(["AWS/ApplicationELB", "HTTPCode_Target_5XX_Count"], local.target, [{ label = "target 5xx" }]),
+          concat(["AWS/ApplicationELB", "HTTPCode_ELB_5XX_Count"], local.alb, [{ label = "elb 5xx" }]),
         ]
         yAxis = { left = { min = 0 } }
       }
@@ -36,7 +36,7 @@ locals {
       width  = 12
       height = 6
       properties = {
-        title  = "Время ответа"
+        title  = "Response time"
         region = local.region
         view   = "timeSeries"
         period = 60
@@ -55,15 +55,15 @@ locals {
       width  = 12
       height = 6
       properties = {
-        title  = "Задачи"
+        title  = "Tasks"
         region = local.region
         view   = "timeSeries"
         period = 60
         metrics = [
-          concat(["ECS/ContainerInsights", "RunningTaskCount"], local.ecs, [{ stat = "Average", label = "работает" }]),
-          concat(["ECS/ContainerInsights", "DesiredTaskCount"], local.ecs, [{ stat = "Average", label = "требуется" }]),
-          concat(["AWS/ApplicationELB", "HealthyHostCount"], local.target, [{ stat = "Minimum", label = "здоровых" }]),
-          concat(["AWS/ApplicationELB", "UnHealthyHostCount"], local.target, [{ stat = "Maximum", label = "нездоровых" }]),
+          concat(["ECS/ContainerInsights", "RunningTaskCount"], local.ecs, [{ stat = "Average", label = "running" }]),
+          concat(["ECS/ContainerInsights", "DesiredTaskCount"], local.ecs, [{ stat = "Average", label = "desired" }]),
+          concat(["AWS/ApplicationELB", "HealthyHostCount"], local.target, [{ stat = "Minimum", label = "healthy" }]),
+          concat(["AWS/ApplicationELB", "UnHealthyHostCount"], local.target, [{ stat = "Maximum", label = "unhealthy" }]),
         ]
         yAxis = { left = { min = 0 } }
       }
@@ -75,13 +75,13 @@ locals {
       width  = 12
       height = 6
       properties = {
-        title  = "Ресурсы задач"
+        title  = "Task resources"
         region = local.region
         view   = "timeSeries"
         period = 60
         metrics = [
           concat(["AWS/ECS", "CPUUtilization"], local.ecs, [{ stat = "Average", label = "CPU %" }]),
-          concat(["AWS/ECS", "MemoryUtilization"], local.ecs, [{ stat = "Average", label = "память %" }]),
+          concat(["AWS/ECS", "MemoryUtilization"], local.ecs, [{ stat = "Average", label = "memory %" }]),
         ]
         yAxis = { left = { min = 0, max = 100 } }
       }
@@ -100,7 +100,7 @@ locals {
         metrics = [
           concat(["AWS/RDS", "ServerlessDatabaseCapacity"], local.db, [{ stat = "Average", label = "ACU" }]),
           concat(["AWS/RDS", "CPUUtilization"], local.db, [{ stat = "Average", label = "CPU %" }]),
-          concat(["AWS/RDS", "DatabaseConnections"], local.db, [{ stat = "Maximum", label = "соединений" }]),
+          concat(["AWS/RDS", "DatabaseConnections"], local.db, [{ stat = "Maximum", label = "connections" }]),
         ]
         yAxis = { left = { min = 0 } }
       }
@@ -112,7 +112,7 @@ locals {
       width  = 12
       height = 6
       properties = {
-        title  = "Ошибки в логах"
+        title  = "Errors in logs"
         region = local.region
         query  = "SOURCE '${var.log_group_name}' | fields @timestamp, @message | filter @message like /(?i)(fatal|error|exception)/ | sort @timestamp desc | limit 50"
         view   = "table"

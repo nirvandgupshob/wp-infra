@@ -1,50 +1,50 @@
 output "vpc_id" {
-  description = "Идентификатор VPC"
+  description = "VPC id"
   value       = module.network.vpc_id
 }
 
 output "private_subnet_ids" {
-  description = "Подсети задач"
+  description = "Task subnets"
   value       = module.network.private_subnet_ids
 }
 
 output "isolated_subnet_ids" {
-  description = "Подсети базы и EFS"
+  description = "Database and EFS subnets"
   value       = module.network.isolated_subnet_ids
 }
 
 output "nat_public_ips" {
-  description = "Внешние адреса NAT"
+  description = "NAT public addresses"
   value       = module.network.nat_public_ips
 }
 
 output "site_url" {
-  description = "Адрес окружения"
+  description = "Environment URL"
   value       = module.service.site_url
 }
 
 output "ecs_cluster" {
-  description = "Кластер ECS"
+  description = "ECS cluster"
   value       = module.service.cluster_name
 }
 
 output "ecs_service" {
-  description = "Сервис ECS"
+  description = "ECS service"
   value       = module.service.service_name
 }
 
 output "log_group" {
-  description = "Группа логов"
+  description = "Log group"
   value       = module.service.log_group_name
 }
 
 output "admin_secret_arn" {
-  description = "Секрет администратора WordPress"
+  description = "WordPress administrator secret"
   value       = module.service.admin_secret_arn
 }
 
 output "maintenance_task_args" {
-  description = "Параметры запуска разовой задачи"
+  description = "Arguments for running a one-off task"
   value = {
     cluster         = module.service.cluster_name
     task_definition = module.service.task_definition_family
@@ -55,26 +55,26 @@ output "maintenance_task_args" {
 }
 
 output "certificate_arn" {
-  description = "Сертификат для listener'а"
+  description = "Certificate for the listener"
   value       = module.dns.certificate_arn
 }
 
 output "db_writer_endpoint" {
-  description = "Адрес базы"
+  description = "Database endpoint"
   value       = module.database.writer_endpoint
 }
 
 output "efs_file_system_id" {
-  description = "Файловая система загрузок"
+  description = "Uploads file system"
   value       = module.storage.file_system_id
 }
 
 output "efs_access_point_id" {
-  description = "Access point загрузок"
+  description = "Uploads access point"
   value       = module.storage.access_point_id
 }
 
 output "db_secret_arn" {
-  description = "Секрет с паролем базы"
+  description = "Database password secret"
   value       = module.database.master_user_secret_arn
 }

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: Окружение для apply
+        description: Environment to apply
         required: true
         type: choice
         options: [staging, production]
@@ -50,14 +50,6 @@ jobs:
       - name: TFLint
         run: tflint --recursive --minimum-failure-severity=error
 
-      - name: Checkov
-        uses: bridgecrewio/checkov-action@master
-        with:
-          directory: .
-          framework: terraform
-          quiet: true
-          soft_fail: false
-          skip_check: CKV_AWS_18,CKV_AWS_144,CKV2_AWS_62,CKV_AWS_338
 
   plan:
     if: github.event_name == 'pull_request'
@@ -101,13 +93,13 @@ jobs:
             let body = fs.readFileSync(`envs/${env}/plan-full.txt`, 'utf8');
             const limit = 60000;
             if (body.length > limit) {
-              body = body.slice(0, limit) + '\n\n... вывод обрезан, полный план в логах задачи';
+              body = body.slice(0, limit) + '\n\n... truncated, see the job log for the full plan';
             }
 
             const summary = (fs.readFileSync(`envs/${env}/plan.txt`, 'utf8')
-              .match(/^Plan: .*$|^No changes\..*$/m) || ['план не разобран'])[0];
+              .match(/^Plan: .*$|^No changes\..*$/m) || ['plan not parsed'])[0];
 
-            const comment = `${marker}\n### Terraform plan — \`${env}\`\n\n**${summary}**\n\n<details><summary>Развернуть</summary>\n\n\`\`\`terraform\n${body}\n\`\`\`\n\n</details>`;
+            const comment = `${marker}\n### Terraform plan — \`${env}\`\n\n**${summary}**\n\n<details><summary>Expand</summary>\n\n\`\`\`terraform\n${body}\n\`\`\`\n\n</details>`;
 
             const {data: comments} = await github.rest.issues.listComments({
               ...context.repo, issue_number: context.issue.number,

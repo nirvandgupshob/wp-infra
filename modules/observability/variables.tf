@@ -1,85 +1,85 @@
 variable "name_prefix" {
-  description = "Префикс имён ресурсов"
+  description = "Resource name prefix"
   type        = string
 }
 
 variable "alarm_emails" {
-  description = "Адреса для уведомлений; подписку нужно подтвердить письмом"
+  description = "Alert recipients; each subscription must be confirmed by email"
   type        = list(string)
   default     = []
 }
 
 variable "alb_arn_suffix" {
-  description = "Суффикс ARN балансировщика"
+  description = "Load balancer ARN suffix"
   type        = string
 }
 
 variable "target_group_arn_suffix" {
-  description = "Суффикс ARN target group"
+  description = "Target group ARN suffix"
   type        = string
 }
 
 variable "ecs_cluster_name" {
-  description = "Кластер ECS"
+  description = "ECS cluster"
   type        = string
 }
 
 variable "ecs_service_name" {
-  description = "Сервис ECS"
+  description = "ECS service"
   type        = string
 }
 
 variable "db_cluster_identifier" {
-  description = "Идентификатор кластера Aurora"
+  description = "Aurora cluster identifier"
   type        = string
 }
 
 variable "log_group_name" {
-  description = "Группа логов контейнеров"
+  description = "Container log group"
   type        = string
 }
 
 variable "site_domain" {
-  description = "Имя для внешней проверки доступности"
+  description = "Domain for the external availability check"
   type        = string
 }
 
 variable "desired_count" {
-  description = "Ожидаемое число задач"
+  description = "Expected task count"
   type        = number
 }
 
 variable "db_max_capacity" {
-  description = "Максимум ACU базы"
+  description = "Database maximum ACU"
   type        = number
 }
 
 variable "healthy_hosts_threshold" {
-  description = "Минимум здоровых задач за балансировщиком"
+  description = "Minimum healthy targets behind the load balancer"
   type        = number
   default     = 1
 }
 
 variable "error_5xx_threshold" {
-  description = "Ошибок 5xx за пять минут"
+  description = "5xx errors per five minutes"
   type        = number
   default     = 10
 }
 
 variable "latency_p95_seconds" {
-  description = "Порог задержки p95, секунд"
+  description = "p95 latency threshold, seconds"
   type        = number
   default     = 2
 }
 
 variable "db_cpu_threshold" {
-  description = "Порог загрузки CPU базы, процентов"
+  description = "Database CPU threshold, percent"
   type        = number
   default     = 80
 }
 
 variable "enable_health_check" {
-  description = "Внешняя проверка доступности через Route53"
+  description = "External availability check via Route53"
   type        = bool
   default     = true
 }

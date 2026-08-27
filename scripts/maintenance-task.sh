@@ -2,8 +2,8 @@
 
 set -Eeuo pipefail
 
-ENVIRONMENT="${1:?укажите окружение: staging или production}"
-COMMAND="${2:?укажите команду, например 'wp core update-db'}"
+ENVIRONMENT="${1:?environment: staging or production}"
+COMMAND="${2:?command, for example 'wp core update-db'}"
 
 ENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../envs/${ENVIRONMENT}" && pwd)"
 
@@ -16,8 +16,8 @@ CONTAINER="$(jq -r '.container' <<<"$ARGS")"
 SUBNETS="$(jq -r '.subnets' <<<"$ARGS")"
 SECURITY_GROUP="$(jq -r '.security_group' <<<"$ARGS")"
 
-log "окружение: ${ENVIRONMENT}, кластер: ${CLUSTER}"
-log "команда: ${COMMAND}"
+log "environment: ${ENVIRONMENT}, cluster: ${CLUSTER}"
+log "command: ${COMMAND}"
 
 WRAPPED="set -e; cd /var/www/html; ${COMMAND}"
 
@@ -35,7 +35,7 @@ TASK_ARN="$(aws ecs run-task \
     --query 'tasks[0].taskArn' --output text)"
 
 TASK_ID="${TASK_ARN##*/}"
-log "задача запущена: ${TASK_ID}"
+log "task started: ${TASK_ID}"
 
 for attempt in $(seq 1 60); do
     STATUS="$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK_ARN" \
@@ -44,7 +44,7 @@ for attempt in $(seq 1 60); do
     [ "$STATUS" = "STOPPED" ] && break
 
     if [ "$attempt" -eq 60 ]; then
-        echo "[maint] задача не завершилась за отведённое время" >&2
+        echo "[maint] task did not finish in time" >&2
         exit 1
     fi
 
@@ -56,7 +56,7 @@ EXIT_CODE="$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK_ARN" \
 
 LOG_GROUP="$(terraform -chdir="$ENV_DIR" output -raw log_group)"
 
-log 'вывод задачи:'
+log 'task output:'
 aws logs get-log-events \
     --log-group-name "$LOG_GROUP" \
     --log-stream-name "${CONTAINER}/${CONTAINER}/${TASK_ID}" \
@@ -64,8 +64,8 @@ aws logs get-log-events \
     | tr '\t' '\n' | sed 's/^/    /'
 
 if [ "$EXIT_CODE" != "0" ]; then
-    echo "[maint] задача завершилась с кодом ${EXIT_CODE}" >&2
+    echo "[maint] task exited with code ${EXIT_CODE}" >&2
     exit 1
 fi
 
-log 'готово'
+log 'done'

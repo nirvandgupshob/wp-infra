@@ -1,34 +1,34 @@
 variable "project" {
-  description = "Префикс проекта"
+  description = "Project prefix"
   type        = string
   default     = "wp"
 
   validation {
     condition     = can(regex("^[a-z][a-z0-9-]{1,15}$", var.project))
-    error_message = "Строчные латинские буквы, цифры и дефис, длина 2-16 символов"
+    error_message = "Lowercase letters, digits and hyphens, 2 to 16 characters."
   }
 }
 
 variable "aws_region" {
-  description = "Регион AWS"
+  description = "AWS region"
   type        = string
   default     = "eu-central-1"
 }
 
 variable "noncurrent_version_retention_days" {
-  description = "Хранение прошлых версий state, дней"
+  description = "Noncurrent state version retention, days"
   type        = number
   default     = 30
 }
 
 variable "infra_repository" {
-  description = "Репозиторий инфраструктуры в формате owner/repo"
+  description = "Infrastructure repository as owner/repo"
   type        = string
   default     = "nirvandgupshob/wp-infra"
 }
 
 variable "app_repository" {
-  description = "Репозиторий приложения в формате owner/repo"
+  description = "Application repository as owner/repo"
   type        = string
   default     = "nirvandgupshob/wp-app"
 }
