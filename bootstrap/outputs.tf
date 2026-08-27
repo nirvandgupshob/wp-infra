@@ -32,3 +32,8 @@ output "backend_config" {
     }
   EOT
 }
+
+output "github_role_arns" {
+  description = "Роли для GitHub Actions"
+  value       = { for k, r in aws_iam_role.github : k => r.arn }
+}

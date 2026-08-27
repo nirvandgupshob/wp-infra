@@ -1,0 +1,183 @@
+name: terraform
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Окружение для apply
+        required: true
+        type: choice
+        options: [staging, production]
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+env:
+  AWS_REGION: eu-central-1
+  TF_VERSION: 1.15.8
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Format
+        run: terraform fmt -check -recursive -diff
+
+      - name: Validate
+        run: |
+          for dir in bootstrap envs/staging envs/production; do
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: TFLint
+        run: tflint --recursive --minimum-failure-severity=error
+
+      - name: Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: terraform
+          quiet: true
+          soft_fail: false
+          skip_check: CKV_AWS_18,CKV_AWS_144,CKV2_AWS_62,CKV_AWS_338
+
+  plan:
+    if: github.event_name == 'pull_request'
+    needs: checks
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [staging, production]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::756250138234:role/wp-gh-terraform-plan
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Plan
+        id: plan
+        run: |
+          cd "envs/${{ matrix.environment }}"
+          terraform init -input=false
+          terraform plan -input=false -lock=false -no-color -out=tfplan 2>&1 | tee plan.txt
+          terraform show -no-color tfplan > plan-full.txt
+        continue-on-error: true
+
+      - name: Comment on the pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const env = '${{ matrix.environment }}';
+            const marker = `<!-- terraform-plan-${env} -->`;
+
+            let body = fs.readFileSync(`envs/${env}/plan-full.txt`, 'utf8');
+            const limit = 60000;
+            if (body.length > limit) {
+              body = body.slice(0, limit) + '\n\n... вывод обрезан, полный план в логах задачи';
+            }
+
+            const summary = (fs.readFileSync(`envs/${env}/plan.txt`, 'utf8')
+              .match(/^Plan: .*$|^No changes\..*$/m) || ['план не разобран'])[0];
+
+            const comment = `${marker}\n### Terraform plan — \`${env}\`\n\n**${summary}**\n\n<details><summary>Развернуть</summary>\n\n\`\`\`terraform\n${body}\n\`\`\`\n\n</details>`;
+
+            const {data: comments} = await github.rest.issues.listComments({
+              ...context.repo, issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo, comment_id: existing.id, body: comment,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: context.issue.number, body: comment,
+              });
+            }
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  apply-staging:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging')
+    needs: checks
+    runs-on: ubuntu-24.04
+    environment: staging
+    concurrency:
+      group: terraform-staging
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::756250138234:role/wp-gh-terraform-apply-staging
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Apply
+        run: |
+          cd envs/staging
+          terraform init -input=false
+          terraform apply -input=false -auto-approve
+
+  apply-production:
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
+    needs: checks
+    runs-on: ubuntu-24.04
+    environment: production
+    concurrency:
+      group: terraform-production
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::756250138234:role/wp-gh-terraform-apply-production
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Apply
+        run: |
+          cd envs/production
+          terraform init -input=false
+          terraform apply -input=false -auto-approve

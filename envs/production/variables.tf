@@ -47,13 +47,15 @@ variable "flow_logs_retention_days" {
 }
 
 variable "container_image" {
-  description = "Образ, проверенный в staging; с дайджестом"
+  description = "Начальный образ задачи; дальше им управляет пайплайн приложения"
   type        = string
+  default     = "756250138234.dkr.ecr.eu-central-1.amazonaws.com/wp/wordpress:theme-132243"
 }
 
 variable "app_version" {
   description = "Версия приложения"
   type        = string
+  default     = "theme-132243"
 }
 
 variable "service_desired_count" {

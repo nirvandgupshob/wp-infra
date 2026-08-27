@@ -185,7 +185,7 @@ resource "aws_ecs_service" "this" {
   wait_for_steady_state = var.wait_for_steady_state
 
   lifecycle {
-    ignore_changes = [desired_count]
+    ignore_changes = [desired_count, task_definition]
   }
 
   depends_on = [aws_lb_listener.https]
