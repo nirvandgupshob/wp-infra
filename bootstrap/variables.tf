@@ -21,14 +21,38 @@ variable "noncurrent_version_retention_days" {
   default     = 30
 }
 
+variable "github_owner" {
+  description = "GitHub account name and numeric id"
+  type = object({
+    name = string
+    id   = number
+  })
+  default = {
+    name = "nirvandgupshob"
+    id   = 158572548
+  }
+}
+
 variable "infra_repository" {
-  description = "Infrastructure repository as owner/repo"
-  type        = string
-  default     = "nirvandgupshob/wp-infra"
+  description = "Infrastructure repository name and numeric id"
+  type = object({
+    name = string
+    id   = number
+  })
+  default = {
+    name = "wp-infra"
+    id   = 1344731792
+  }
 }
 
 variable "app_repository" {
-  description = "Application repository as owner/repo"
-  type        = string
-  default     = "nirvandgupshob/wp-app"
+  description = "Application repository name and numeric id"
+  type = object({
+    name = string
+    id   = number
+  })
+  default = {
+    name = "wp-app"
+    id   = 1345383465
+  }
 }

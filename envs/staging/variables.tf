@@ -43,7 +43,7 @@ variable "single_nat_gateway" {
 variable "flow_logs_retention_days" {
   description = "Flow logs retention, days"
   type        = number
-  default     = 7
+  default     = 14
 }
 
 variable "container_image" {
