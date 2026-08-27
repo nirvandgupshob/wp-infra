@@ -1,25 +1,26 @@
 locals {
+  github_owner = "${var.github_owner.name}@${var.github_owner.id}"
+  infra_repo   = "repo:${local.github_owner}/${var.infra_repository.name}@${var.infra_repository.id}"
+  app_repo     = "repo:${local.github_owner}/${var.app_repository.name}@${var.app_repository.id}"
+
   github_subjects = {
     terraform-plan = {
-      repo     = var.infra_repository
-      subjects = ["repo:${var.infra_repository}:pull_request", "repo:${var.infra_repository}:ref:refs/heads/main"]
+      subjects = ["${local.infra_repo}:pull_request", "${local.infra_repo}:ref:refs/heads/main"]
       apply    = false
     }
     terraform-apply-staging = {
-      repo     = var.infra_repository
-      subjects = ["repo:${var.infra_repository}:environment:staging"]
+      subjects = ["${local.infra_repo}:environment:staging"]
       apply    = true
     }
     terraform-apply-production = {
-      repo     = var.infra_repository
-      subjects = ["repo:${var.infra_repository}:environment:production"]
+      subjects = ["${local.infra_repo}:environment:production"]
       apply    = true
     }
   }
 
   github_deploy_roles = {
-    deploy-staging    = ["repo:${var.app_repository}:environment:staging"]
-    deploy-production = ["repo:${var.app_repository}:environment:production"]
+    deploy-staging    = ["${local.app_repo}:environment:staging"]
+    deploy-production = ["${local.app_repo}:environment:production"]
   }
 }
 
