@@ -91,14 +91,18 @@ jobs:
             const env = '${{ matrix.environment }}';
             const marker = `<!-- terraform-plan-${env} -->`;
 
-            let body = fs.readFileSync(`envs/${env}/plan-full.txt`, 'utf8');
+            const full = `envs/${env}/plan-full.txt`;
+            const raw = `envs/${env}/plan.txt`;
+            let body = fs.existsSync(full)
+              ? fs.readFileSync(full, 'utf8')
+              : fs.readFileSync(raw, 'utf8');
             const limit = 60000;
             if (body.length > limit) {
               body = body.slice(0, limit) + '\n\n... truncated, see the job log for the full plan';
             }
 
-            const summary = (fs.readFileSync(`envs/${env}/plan.txt`, 'utf8')
-              .match(/^Plan: .*$|^No changes\..*$/m) || ['plan not parsed'])[0];
+            const summary = (fs.readFileSync(raw, 'utf8')
+              .match(/^Plan: .*$|^No changes\..*$|^Error: .*$/m) || ['plan not parsed'])[0];
 
             const comment = `${marker}\n### Terraform plan — \`${env}\`\n\n**${summary}**\n\n<details><summary>Expand</summary>\n\n\`\`\`terraform\n${body}\n\`\`\`\n\n</details>`;
 
