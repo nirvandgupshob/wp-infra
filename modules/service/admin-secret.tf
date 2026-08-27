@@ -1,6 +1,5 @@
-resource "random_password" "wp_admin" {
-  length = 32
-
+ephemeral "random_password" "wp_admin" {
+  length           = 32
   override_special = "!#%*-_=+?"
 }
 
@@ -16,13 +15,11 @@ resource "aws_secretsmanager_secret" "wp_admin" {
 resource "aws_secretsmanager_secret_version" "wp_admin" {
   secret_id = aws_secretsmanager_secret.wp_admin.id
 
-  secret_string = jsonencode({
+  secret_string_wo = jsonencode({
     username = var.admin_username
     email    = var.admin_email
-    password = random_password.wp_admin.result
+    password = ephemeral.random_password.wp_admin.result
   })
 
-  lifecycle {
-    ignore_changes = [secret_string]
-  }
+  secret_string_wo_version = var.admin_password_version
 }

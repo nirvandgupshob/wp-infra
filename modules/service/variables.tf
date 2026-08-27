@@ -215,3 +215,9 @@ variable "wait_for_steady_state" {
   type        = bool
   default     = false
 }
+
+variable "admin_password_version" {
+  description = "Bump to regenerate the administrator password"
+  type        = number
+  default     = 1
+}
