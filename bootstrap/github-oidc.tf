@@ -25,11 +25,14 @@ locals {
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = []
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
 
   tags = { Name = "${var.project}-github" }
+
+  lifecycle {
+    ignore_changes = [thumbprint_list]
+  }
 }
 
 data "aws_iam_policy_document" "github_assume" {
@@ -225,4 +228,29 @@ resource "aws_iam_role_policy" "app_deploy" {
   name   = "deploy-wordpress"
   role   = aws_iam_role.github[each.key].id
   policy = data.aws_iam_policy_document.app_deploy.json
+}
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "production_snapshot" {
+  statement {
+    sid    = "SnapshotBeforeRelease"
+    effect = "Allow"
+
+    actions = [
+      "rds:CreateDBClusterSnapshot",
+      "rds:DescribeDBClusterSnapshots",
+      "rds:AddTagsToResource",
+    ]
+
+    resources = [
+      "arn:aws:rds:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:cluster:${var.project}-production",
+      "arn:aws:rds:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:cluster-snapshot:${var.project}-production-*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "production_snapshot" {
+  name   = "snapshot-before-release"
+  role   = aws_iam_role.github["deploy-production"].id
+  policy = data.aws_iam_policy_document.production_snapshot.json
 }
