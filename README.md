@@ -9,6 +9,50 @@ Terraform для инфраструктуры AWS под [wp-app](https://github
 
 Локальное окружение живёт в `wp-app` и поднимается через `make up`.
 
+## Путь запроса
+
+```mermaid
+flowchart TB
+ subgraph public["public-подсети, две зоны"]
+        alb["ALB<br>терминирует TLS сертификатом ACM<br>"]
+        nat["NAT Gateway"]
+  end
+ subgraph private["<br>"]
+        t1["Задача Fargate<br>зона a"]
+        t2["Задача Fargate<br>зона b"]
+  end
+ subgraph isolated[" "]
+        db[("Aurora MySQL<br>writer и reader")]
+        efs[["EFS<br>wp-content/uploads"]]
+  end
+ subgraph vpc["VPC"]
+        public
+        private
+        isolated
+  end
+ subgraph region[" "]
+        ecr[("ECR")]
+        sm["Secrets Manager"]
+        cw["CloudWatch"]
+  end
+    user(["Пользователь"]) -- HTTPS --> r53["Route53<br>alias-запись на ALB"]
+    r53 --> alb
+    alb -- 8080 --> t1 & t2
+    t1 --> db & efs & nat
+    t2 --> db & efs & nat
+    nat -. при старте задачи: образ .-> ecr
+    nat -. при старте задачи: пароль базы .-> sm
+    nat -. логи и метрики .-> cw
+```
+
+1. Браузер резолвит `wp-demo-bogdan.click`. Route53 отдаёт alias на балансировщик, у которого есть узел в каждой зоне доступности.
+2. TLS терминируется на ALB сертификатом ACM. Запрос, пришедший на порт 80, получает 301 на 443.
+3. ALB выбирает здоровую цель. Здоровье определяется по `/healthz.php` — эта проба не обращается к базе, чтобы просадка Aurora не выбила из ротации сразу все задачи.
+4. До задачи запрос идёт обычным HTTP на порт 8080 внутри VPC. Security group задач принимает только группу балансировщика, иначе до контейнера не достучаться.
+5. Apache передаёт запрос PHP. WordPress читает `X-Forwarded-Proto` и генерирует https-ссылки, хотя сам получил запрос по http.
+6. За данными WordPress идёт в Aurora на 3306 по TLS, за загруженными файлами — в EFS на 2049. У обеих подсетей нет маршрута по умолчанию, наружу оттуда хода нет.
+7. Ответ возвращается тем же путём.
+
 ## Структура
 
 ```
