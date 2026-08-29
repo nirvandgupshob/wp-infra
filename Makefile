@@ -41,7 +41,7 @@ lint: ## Check formatting, configuration and shell syntax
 	terraform fmt -recursive -check -diff
 	@$(MAKE) --no-print-directory validate
 	@docker run --rm -v "$$PWD:/data" -w /data ghcr.io/terraform-linters/tflint --recursive
-	@docker run --rm -v "$$PWD:/mnt" -w /mnt koalaman/shellcheck:stable scripts/*.sh
+	@docker run --rm -v "$$PWD:/mnt" -w /mnt koalaman/shellcheck:latest scripts/*.sh
 	@echo "all checks passed"
 
 verify: ## Check that the environment is healthy

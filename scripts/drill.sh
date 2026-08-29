@@ -58,7 +58,9 @@ TASK_SG="$(jq -r '.security_group' <<<"$TASK_ARGS")"
 POLLER=""
 
 cleanup() {
-    [ -n "$POLLER" ] && kill "$POLLER" 2>/dev/null || true
+    if [ -n "$POLLER" ]; then
+        kill "$POLLER" 2>/dev/null || true
+    fi
     rm -rf "$WORK"
 }
 trap cleanup EXIT
@@ -76,7 +78,9 @@ start_polling() {
 }
 
 stop_polling() {
-    [ -n "$POLLER" ] && kill "$POLLER" 2>/dev/null || true
+    if [ -n "$POLLER" ]; then
+        kill "$POLLER" 2>/dev/null || true
+    fi
     POLLER=""
     TOTAL="$(grep -c . "${WORK}/codes" || true)"
     GOOD="$(grep -c '^200$' "${WORK}/codes" || true)"
