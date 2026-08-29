@@ -50,6 +50,9 @@ jobs:
       - name: TFLint
         run: tflint --recursive --minimum-failure-severity=error
 
+      - name: ShellCheck
+        run: shellcheck scripts/*.sh
+
 
   plan:
     if: github.event_name == 'pull_request'
@@ -152,6 +155,9 @@ jobs:
           terraform init -input=false
           terraform apply -input=false -auto-approve
 
+      - name: Verify
+        run: ./scripts/verify.sh staging
+
   apply-production:
     if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
     needs: checks
@@ -178,3 +184,6 @@ jobs:
           cd envs/production
           terraform init -input=false
           terraform apply -input=false -auto-approve
+
+      - name: Verify
+        run: ./scripts/verify.sh production
