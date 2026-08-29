@@ -56,3 +56,9 @@ variable "app_repository" {
     id   = 1345383465
   }
 }
+
+variable "audit_log_retention_days" {
+  description = "CloudTrail log retention, days"
+  type        = number
+  default     = 90
+}
