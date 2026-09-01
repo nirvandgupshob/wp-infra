@@ -49,13 +49,13 @@ variable "flow_logs_retention_days" {
 variable "container_image" {
   description = "WordPress image from ECR"
   type        = string
-  default     = "756250138234.dkr.ecr.eu-central-1.amazonaws.com/wp/wordpress:theme-132243"
+  default     = "756250138234.dkr.ecr.eu-central-1.amazonaws.com/wp/wordpress@sha256:8c85241d995ba37bd041b5045bd9d630d1d45b7d359d4c300a3dd1f0f3b68d09"
 }
 
 variable "app_version" {
   description = "Application version"
   type        = string
-  default     = "theme-132243"
+  default     = "v0.1.2"
 }
 
 variable "service_desired_count" {
