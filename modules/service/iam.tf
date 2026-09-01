@@ -46,6 +46,7 @@ data "aws_iam_policy_document" "execution_secrets" {
     resources = [
       var.db_secret_arn,
       aws_secretsmanager_secret.wp_admin.arn,
+      aws_secretsmanager_secret.wp_salts.arn,
     ]
   }
 

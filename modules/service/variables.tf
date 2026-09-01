@@ -221,3 +221,9 @@ variable "admin_password_version" {
   type        = number
   default     = 1
 }
+
+variable "salts_version" {
+  description = "Bump to regenerate the authentication salts"
+  type        = number
+  default     = 1
+}

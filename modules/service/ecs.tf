@@ -92,7 +92,7 @@ resource "aws_ecs_task_definition" "this" {
         }
       ]
 
-      secrets = [
+      secrets = concat([
         {
           name      = "WORDPRESS_DB_USER"
           valueFrom = "${var.db_secret_arn}:username::"
@@ -113,7 +113,13 @@ resource "aws_ecs_task_definition" "this" {
           name      = "WORDPRESS_ADMIN_EMAIL"
           valueFrom = "${aws_secretsmanager_secret.wp_admin.arn}:email::"
         },
-      ]
+        ],
+        [
+          for key in local.wp_salt_keys : {
+            name      = "WORDPRESS_${key}"
+            valueFrom = "${aws_secretsmanager_secret.wp_salts.arn}:${key}::"
+          }
+      ])
 
       mountPoints = [
         {
